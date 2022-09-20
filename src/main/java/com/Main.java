@@ -1,5 +1,11 @@
 package com;
 
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.data.category.DefaultCategoryDataset;
+
 import javax.swing.*;
 import javax.swing.text.DefaultCaret;
 
@@ -20,6 +26,9 @@ public class Main extends JFrame{
     static JLabel l2; // 2 лампа
     static Image ligG; // Зеленая лампа
     static Image ligR; // Красная лампа
+    static DefaultCategoryDataset dataset; // Датасет для графика
+    static JLabel emer1;
+    static JLabel emer2;
     static int check = 0; // УДАЛИТЬ ПОЗЖЕ
 
     public static void window(){
@@ -33,28 +42,36 @@ public class Main extends JFrame{
         JPanel pan2 = new JPanel(); // Вторая вкладка
         pBar = new JProgressBar(); // Отображение свободного места на парковке
         JScrollPane jSP; // Прокрутка элемента
+        JLabel emInfo1 = new JLabel("Запуск аварийного питания");
+        JLabel emInfo2 = new JLabel("Вызов экстренных служб");
 
-        count = new JLabel("100/100 мест занято");
+        count = new JLabel("0/100 мест занято");
         Font font = count.getFont().deriveFont(16f); // Увеличение величины шрифт
 
         // Изображения
         Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/1.png"));
         ligG = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/light green.png"));
         ligR = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/light red.png"));
+        Image em1 = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/dark lightning.png"));
+        Image em2 = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/dark112.png"));
 
         // JLable с изображениями
         l1 = new JLabel(new ImageIcon(ligG));
         l2 = new JLabel(new ImageIcon(ligG));
         im = new JLabel();
         im1 = new JLabel();
+        emer1 = new JLabel(new ImageIcon(em1));
+        emer2 = new JLabel(new ImageIcon(em2));
         im.setIcon(new ImageIcon(image));
         im1.setIcon(new ImageIcon(image));
 
 
-        im.setBounds(540,25,85,85);
-        im1.setBounds(540,120,85,85);
-        l1.setBounds(625,90,12,12);
-        l2.setBounds(625,185,12,12);
+        im.setBounds(620,25,85,85);
+        im1.setBounds(620,120,85,85);
+        l1.setBounds(705,90,12,12);
+        l2.setBounds(705,185,12,12);
+        emer1.setBounds(20,360,80,80);
+        emer2.setBounds(20,450,80,80);
         //im.setBorder(BorderFactory.createMatteBorder(1,1,1,1,Color.GRAY));
 
         pan1.setLayout(null); // Абсолютное позиционирование
@@ -62,10 +79,14 @@ public class Main extends JFrame{
 
         count.setBounds(65,320,200,35);
         count.setFont(font);
+        emInfo1.setBounds(110,390,200,20);
+        emInfo1.setFont(count.getFont().deriveFont(14f));
+        emInfo2.setBounds(110,480,200,20);
+        emInfo2.setFont(count.getFont().deriveFont(14f));
 
         pBar.setMaximum(100);
         pBar.setMinimum(0);
-        pBar.setValue(50);
+        pBar.setValue(0);
         pBar.setBorder(BorderFactory.createMatteBorder(2,2,2,2,Color.GRAY));
         pBar.setBackground(Color.decode("#74ED79"));
         pBar.setForeground(Color.decode("#4F6355"));
@@ -88,7 +109,29 @@ public class Main extends JFrame{
         tp.addTab("Панель управления", pan1); // Отдельные вкладки в приложении
         tp.addTab("Настройки", pan2);
 
+        /////////////////////////////////////////////////////////////////////////////////
+        //График
+        dataset = new DefaultCategoryDataset();
+        dataset.addValue(0,"","");
+        JFreeChart lineChart = ChartFactory.createLineChart(
+                "Выручка","","",
+                dataset,
+                PlotOrientation.VERTICAL,
+                false,false,false);
 
+        ChartPanel chartPanel = new ChartPanel(lineChart);
+        lineChart.getCategoryPlot().getDomainAxis().setTickLabelsVisible(false);
+
+        chartPanel.setDomainZoomable(true);
+        chartPanel.setBounds(20,5,520,270);
+        pan1.add(chartPanel);
+
+        /////////////////////////////////////////////////////////////////////////////////
+
+        pan1.add(emer1);
+        pan1.add(emer2);
+        pan1.add(emInfo1);
+        pan1.add(emInfo2);
         pan1.add(im);
         pan1.add(im1);
         pan1.add(l1);
@@ -106,6 +149,7 @@ public class Main extends JFrame{
 
     public static void run(){
         time.setText(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+        dataset.addValue(check+Math.random()*5,"",time.getText());
         //pBar.setValue(pBar.getValue()+1);
         if (check%2==0){
             check++;
