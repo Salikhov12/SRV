@@ -55,7 +55,8 @@ public class Main extends JFrame{
         Font font = count.getFont().deriveFont(16f); // Увеличение величины шрифт
 
         // Изображения
-        Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/7.png"));
+        Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/1.png"));
+        Image openIm = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/7.png"));
         ligG = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/light green.png"));
         ligR = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/light red.png"));
         Image em1 = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/dark lightning.png"));
@@ -67,6 +68,7 @@ public class Main extends JFrame{
         Image night1 = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/night.png"));
         Image night2 = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/dark night.png"));
 
+
         // Поля с изображениями
         l1 = new JLabel(new ImageIcon(ligG));
         l2 = new JLabel(new ImageIcon(ligG));
@@ -75,18 +77,18 @@ public class Main extends JFrame{
         im = new JLabel();
         im1 = new JLabel();
         //Кнопки
-        emer1 = new JButton(new ImageIcon(em3));
-        emer2 = new JButton(new ImageIcon(em4));
-        emer1.setDisabledIcon(new ImageIcon(em1));
-        emer1.setPressedIcon(new ImageIcon(em1));
-        emer2.setDisabledIcon(new ImageIcon(em2));
-        emer2.setPressedIcon(new ImageIcon(em2));
-        emer1.setBorder(BorderFactory.createEmptyBorder());
+        emer2 = new JButton(new ImageIcon(em3));
+        emer1 = new JButton(new ImageIcon(em4));
+        emer2.setDisabledIcon(new ImageIcon(em1));
+        emer2.setPressedIcon(new ImageIcon(em1));
+        emer1.setDisabledIcon(new ImageIcon(em2));
+        emer1.setPressedIcon(new ImageIcon(em2));
         emer2.setBorder(BorderFactory.createEmptyBorder());
-        emer1.setContentAreaFilled(false);
+        emer1.setBorder(BorderFactory.createEmptyBorder());
         emer2.setContentAreaFilled(false);
-        emer1.setEnabled(false);
+        emer1.setContentAreaFilled(false);
         emer2.setEnabled(false);
+        emer1.setEnabled(false);
         fire = new JButton(new ImageIcon(fire1));
         night = new JButton(new ImageIcon(night1));
         fire.setDisabledIcon(new ImageIcon(fire2));
@@ -130,15 +132,70 @@ public class Main extends JFrame{
             }
         });
 
+        // Аварии
+        fire.addActionListener(actionEvent -> {
+            emer++;
+            fire.setEnabled(false);
+            emer1.setEnabled(true);
+            jTA.setText(jTA.getText() + "[" +LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Были обнаружены признаки горения\n");
+            timer = 5;
+        });
+        night.addActionListener(actionEvent -> {
+            emer += 2;
+            night.setEnabled(false);
+            emer2.setEnabled(true);
+            l1.setIcon(new ImageIcon(ligR));
+            l2.setIcon(new ImageIcon(ligR));
+            jTA.setText(jTA.getText() + "[" +LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Было обнаружено неплановое отключение электроэнергии\n");
+            if (!open1 || !open2){
+                jTA.setText(jTA.getText() + "[" +LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Шлагбаумы были подняты\n");
+            }
+            if (!open1){
+                im.setIcon(new ImageIcon(Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"))));
+                open1=true;
+            }
+            if (!open2){
+                im1.setIcon(new ImageIcon(Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"))));
+                open2=true;
+            }
+
+        });
+        emer1.addActionListener(actionEvent -> {
+            if (timer==0){
+                open1=true;
+                open2=true;
+            }
+            timer=3;
+            firePress = true;
+            l3.setIcon(new ImageIcon(ligG));
+            emer1.setEnabled(false);
+            jTA.setText(jTA.getText() + "[" +LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Передана информация о пожаре\n");
+            if (emer!=3){
+                if (!open1 || !open2) {jTA.setText(jTA.getText() + "[" +LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Шлагбаумы были подняты\n");}
+                if (!open1){
+                    im.setIcon(new ImageIcon(Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"))));
+                    open1=true;
+                }
+                if (!open2){
+                    im1.setIcon(new ImageIcon(Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"))));
+                    open2=true;
+                }
+
+            }
+
+            jTA.setText(jTA.getText() + "[" +LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Объявление эвакуации\n");
+
+        });
+
         pan1.setLayout(null); // Абсолютное позиционирование
         pan2.setLayout(null);
 
         count.setBounds(65,320,200,35);
         count.setFont(font);
-        emInfo1.setBounds(110,390,200,20);
-        emInfo1.setFont(count.getFont().deriveFont(14f));
-        emInfo2.setBounds(110,480,200,20);
+        emInfo2.setBounds(110,390,200,20);
         emInfo2.setFont(count.getFont().deriveFont(14f));
+        emInfo1.setBounds(110,480,200,20);
+        emInfo1.setFont(count.getFont().deriveFont(14f));
         fireInfo.setBounds(755,100,110,20);
         fireInfo.setFont(count.getFont().deriveFont(14f));
         nightInfo.setBounds(740,190,110,40);
@@ -163,7 +220,7 @@ public class Main extends JFrame{
         DefaultCaret caret = (DefaultCaret)jTA.getCaret();
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE); //Автоматический скроллинг лога вниз
         jSP = new JScrollPane(jTA,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_NEVER); // Добавление прокрутки элементу
-        jSP.setBounds(375,370,345,150);
+        jSP.setBounds(325,370,405,150);
         jSP.setAutoscrolls(true);
 
         tp.addTab("Панель управления", pan1); // Отдельные вкладки в приложении
@@ -222,6 +279,10 @@ public class Main extends JFrame{
     static int sumMon = 0;
     static double chanceIn = 0.5;
     static double chanceOut = 0.25;
+    static boolean firePress = false;
+    static boolean lightPress = false;
+    static int timer = 0;
+    static boolean firstMes = true;
 
     public static void run(){
         time.setText(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
@@ -229,7 +290,11 @@ public class Main extends JFrame{
         count.setText(curAvt+"/"+maxAvt+" мест занято");
         dataset.addValue(sumMon,"",time.getText());
 
-        if (emer==0){ // Нет аварийной ситуации
+        if ((emer==0) || (emer==1 && timer>0 && !firePress)){ // Нет аварийной ситуации или не вызвана 112
+            if (timer>0) {
+                timer--;
+                System.out.println(timer);
+            }
             if (curAvt<maxAvt){
                 if (!open1){
                     open1 = carEnter();
@@ -288,27 +353,91 @@ public class Main extends JFrame{
             }
         }
         else{
+            switch (emer){
+                case 1:{
+                    if (timer==0 && !firePress){
+                        if (firstMes){
+                            jTA.setText(jTA.getText() + "[" +LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Был обнаружен пожар\n");
+                            if (!open1 || !open2){
+                                jTA.setText(jTA.getText() + "[" +LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Шлагбаумы были подняты\n");
+                            }
+                            if (!open1){
+                                im.setIcon(new ImageIcon(Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"))));
+                                open1=true;
+                            }
+                            if (!open2){
+                                im1.setIcon(new ImageIcon(Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"))));
+                                open2=true;
+                            }
 
+                            firstMes = false;
+                        }
+                        /////////////////////////////
+                        if (!open1){
+                            if (curAvt!=0 && Math.random()< chanceOut){
+                                curAvt--;
+                                open1 = true;
+                            }
+                        }
+                        else{
+                            open1 = false;
+                        }
+                        if (!open2){
+                            if (curAvt!=0 && Math.random()< chanceOut){
+                                curAvt--;
+                                open2 = true;
+                            }
+                        }
+                        else{
+                            open2 = false;
+                        }
+                        ////////////////////////////////////
+                    }
+                    if (firePress && timer>0){
+                        timer--;
+                        System.out.println(timer);
+                        if (!open1){
+                            if (curAvt!=0 && Math.random()< chanceOut){
+                                curAvt--;
+                                open1 = true;
+                            }
+                        }
+                        else{
+                            open1 = false;
+                        }
+                        if (!open2){
+                            if (curAvt!=0 && Math.random()< chanceOut){
+                                curAvt--;
+                                open2 = true;
+                            }
+                        }
+                        else{
+                            open2 = false;
+                        }
+                    }
+                    if (firePress && timer == 0){
+                        emer = 0;
+                        jTA.setText(jTA.getText() + "[" +LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Пожар был ликвидирован\n");
+                        firePress = false;
+                        firstMes = true;
+                        l3.setIcon(new ImageIcon(ligR));
+                        fire.setEnabled(true);
+                        if (!open1){
+                            im.setIcon(new ImageIcon(Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/close.gif"))));
+                            open1=false;
+                        }
+                        if (!open2){
+                            im1.setIcon(new ImageIcon(Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/close.gif"))));
+                            open2=false;
+                        }
+                    }
+                    break;}
+                case 2:{
+                    break;}
+                case 3:{
+                    break;}
+            }
         }
-        /*
-        dataset.addValue(check+Math.random()*5,"",time.getText());
-        pBar.setValue(pBar.getValue()+1);
-        app.setSize(app.getWidth()+2,app.getHeight());
-
-        if (check%2==0){
-            check++;
-            Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/close.gif"));
-            im.setIcon(new ImageIcon(image));
-        }
-        else{
-            check++;
-            Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"));
-            im.setIcon(new ImageIcon(image));
-        }
-        jTA.setText(jTA.getText() + "[" +LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " message" +check+ "\n");
-        */
-
-
 
 
         try{
