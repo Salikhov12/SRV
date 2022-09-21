@@ -33,7 +33,6 @@ public class Main extends JFrame{
     static JButton emer2;
     static JButton fire;
     static JButton night;
-    static int check = 0; // УДАЛИТЬ ПОЗЖЕ
 
     public static void window(){
 
@@ -214,11 +213,87 @@ public class Main extends JFrame{
         run();
     }
 
+    static int emer = 0;
+    static int maxAvt = 100;
+    static int curAvt = 0;
+    static int monFOH = 1000;
+    static boolean open1 = false;
+    static boolean open2 = false;
+    static int sumMon = 0;
+    static double chanceIn = 0.5;
+    static double chanceOut = 0.25;
+
     public static void run(){
         time.setText(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
+        pBar.setValue(curAvt);
+        count.setText(curAvt+"/"+maxAvt+" мест занято");
+        dataset.addValue(sumMon,"",time.getText());
+
+        if (emer==0){ // Нет аварийной ситуации
+            if (curAvt<maxAvt){
+                if (!open1){
+                    open1 = carEnter();
+                    if (open1){
+                        Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"));
+                        im.setIcon(new ImageIcon(image));
+                    }
+                }
+                else{
+                    Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/close.gif"));
+                    im.setIcon(new ImageIcon(image));
+                    open1 = false;
+                }
+                if (!open2 && curAvt<maxAvt){
+                    open2 = carEnter();
+                    if (open2){
+                        Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"));
+                        im1.setIcon(new ImageIcon(image));
+                    }
+                }
+                else{
+                    Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/close.gif"));
+                    im1.setIcon(new ImageIcon(image));
+                    open2 = false;
+                }
+            }
+            else{
+                if (!open1){
+                    if (curAvt!=0 && Math.random()< chanceOut){
+                        curAvt--;
+                        sumMon+=monFOH*(Math.random()*5+1);
+                        open1 = true;
+                        Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"));
+                        im.setIcon(new ImageIcon(image));
+                    }
+                }
+                else{
+                    Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/close.gif"));
+                    im.setIcon(new ImageIcon(image));
+                    open1 = false;
+                }
+                if (!open2){
+                    if (curAvt!=0 && Math.random()< chanceOut){
+                        curAvt--;
+                        sumMon+=monFOH*(Math.random()*5+1);
+                        open2 = true;
+                        Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"));
+                        im1.setIcon(new ImageIcon(image));
+                    }
+                }
+                else{
+                    Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/close.gif"));
+                    im1.setIcon(new ImageIcon(image));
+                    open2 = false;
+                }
+            }
+        }
+        else{
+
+        }
+        /*
         dataset.addValue(check+Math.random()*5,"",time.getText());
-        //pBar.setValue(pBar.getValue()+1);
-        //app.setSize(app.getWidth()+2,app.getHeight());
+        pBar.setValue(pBar.getValue()+1);
+        app.setSize(app.getWidth()+2,app.getHeight());
 
         if (check%2==0){
             check++;
@@ -230,10 +305,12 @@ public class Main extends JFrame{
             Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"));
             im.setIcon(new ImageIcon(image));
         }
-
-
-
         jTA.setText(jTA.getText() + "[" +LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " message" +check+ "\n");
+        */
+
+
+
+
         try{
             Thread.sleep(1000);
             run();
@@ -242,6 +319,20 @@ public class Main extends JFrame{
             errorDialog(e);
             Thread.currentThread().interrupt();
         }
+    }
+
+    public static boolean carEnter(){
+        double chance = Math.random();
+        if (chance< chanceIn){
+            curAvt++;
+            return true;
+        }
+        if (curAvt!=0 && chance<(chanceIn + chanceOut)){
+            curAvt--;
+            sumMon+=monFOH*(Math.random()*5+1);
+            return true;
+        }
+        return false;
     }
 
     public static void errorDialog(Exception e){
