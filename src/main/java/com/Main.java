@@ -186,6 +186,18 @@ public class Main extends JFrame{
             jTA.setText(jTA.getText() + "[" +LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Объявление эвакуации\n");
 
         });
+        emer2.addActionListener(actionEvent -> {
+            timerEl = 4;
+            jTA.setText(jTA.getText() + "[" +LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Был включен аварийный источник питания\n");
+            open1 = true;
+            open2 = true;
+            l1.setIcon(new ImageIcon(ligG));
+            l2.setIcon(new ImageIcon(ligG));
+            emer2.setEnabled(false);
+            l4.setIcon(new ImageIcon(ligG));
+            lightPress = true;
+
+        });
 
         pan1.setLayout(null); // Абсолютное позиционирование
         pan2.setLayout(null);
@@ -282,7 +294,9 @@ public class Main extends JFrame{
     static boolean firePress = false;
     static boolean lightPress = false;
     static int timer = 0;
+    static int timerEl = 0;
     static boolean firstMes = true;
+
 
     public static void run(){
         time.setText(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
@@ -290,11 +304,22 @@ public class Main extends JFrame{
         count.setText(curAvt+"/"+maxAvt+" мест занято");
         dataset.addValue(sumMon,"",time.getText());
 
-        if ((emer==0) || (emer==1 && timer>0 && !firePress)){ // Нет аварийной ситуации или не вызвана 112
+        if ((emer==0) || (emer==1 && timer>0 && !firePress) || (emer==2 && lightPress)){ // Нет аварийной ситуации или не вызвана 112
             if (timer>0) {
                 timer--;
                 System.out.println(timer);
             }
+            if (timerEl==1){
+                jTA.setText(jTA.getText() + "[" +LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Питание было восстановлено\n");
+                night.setEnabled(true);
+                lightPress = false;
+                l4.setIcon(new ImageIcon(ligR));
+                emer-=2;
+            }
+            if (timerEl>0){
+                timerEl--;
+            }
+
             if (curAvt<maxAvt){
                 if (!open1){
                     open1 = carEnter();
@@ -416,7 +441,7 @@ public class Main extends JFrame{
                         }
                     }
                     if (firePress && timer == 0){
-                        emer = 0;
+                        emer--;
                         jTA.setText(jTA.getText() + "[" +LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Пожар был ликвидирован\n");
                         firePress = false;
                         firstMes = true;
@@ -433,8 +458,64 @@ public class Main extends JFrame{
                     }
                     break;}
                 case 2:{
+                    if (!open1){
+                        if (curAvt!=0 && Math.random()< chanceOut){
+                            curAvt--;
+                            open1 = true;
+                        }
+                    }
+                    else{
+                        open1 = false;
+                    }
+                    if (!open2){
+                        if (curAvt!=0 && Math.random()< chanceOut){
+                            curAvt--;
+                            open2 = true;
+                        }
+                    }
+                    else{
+                        open2 = false;
+                    }
                     break;}
                 case 3:{
+                    if (timer>0){
+                        timer--;
+                    }
+                    if (timer==0 && !firePress){
+                        if (firstMes){
+                            jTA.setText(jTA.getText() + "[" +LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Был обнаружен пожар\n");
+                            firstMes = false;
+                        }
+
+                    }
+                    if (firePress && timer == 0){
+                        emer--;
+                        jTA.setText(jTA.getText() + "[" +LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Пожар был ликвидирован\n");
+                        firePress = false;
+                        firstMes = true;
+                        l3.setIcon(new ImageIcon(ligR));
+                        fire.setEnabled(true);
+                    }
+                    /////////////////////////////
+                    if (!open1){
+                        if (curAvt!=0 && Math.random()< chanceOut){
+                            curAvt--;
+                            open1 = true;
+                        }
+                    }
+                    else{
+                        open1 = false;
+                    }
+                    if (!open2){
+                        if (curAvt!=0 && Math.random()< chanceOut){
+                            curAvt--;
+                            open2 = true;
+                        }
+                    }
+                    else{
+                        open2 = false;
+                    }
+                    ////////////////////////////////////
                     break;}
             }
         }
