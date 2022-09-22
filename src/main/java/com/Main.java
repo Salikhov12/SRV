@@ -36,10 +36,10 @@ public class Main extends JFrame{
     static int emer = 0;
     static int maxAvt = 100;
     static int curAvt = 0;
-    static int monFOH = 1000;
+    static int monFOH = 100;
     static boolean open1 = false;
     static boolean open2 = false;
-    static int sumMon = 0;
+    static long sumMon = 0;
     static double chanceIn = 0.5;
     static double chanceOut = 0.25;
     static boolean firePress = false;
@@ -47,7 +47,10 @@ public class Main extends JFrame{
     static int timer = 0;
     static int timerEl = 0;
     static boolean firstMes = true;
-
+    static double emerChD = 0;
+    static boolean autoCl = false;
+    static int endOfWhile = 1;
+    static boolean begin = false;
 
     public static void window(){
 
@@ -182,6 +185,67 @@ public class Main extends JFrame{
         im.setIcon(new ImageIcon(image));
         im1.setIcon(new ImageIcon(image));
 
+        JButton start = new JButton("Старт");
+        JButton stop = new JButton("Стоп");
+        JButton res = new JButton("Сброс");
+
+        fire.setEnabled(false);
+        night.setEnabled(false);
+        stop.setEnabled(false);
+
+        start.addActionListener(e -> {
+            if (!firePress && timer==0){
+                fire.setEnabled(true);
+            }
+            if (!lightPress && timerEl==0){
+                night.setEnabled(true);
+            }
+            start.setEnabled(false);
+            stop.setEnabled(true);
+            begin = true;
+
+
+        });
+        stop.addActionListener(e -> {
+            start.setEnabled(true);
+            stop.setEnabled(false);
+            begin = false;
+            fire.setEnabled(false);
+            night.setEnabled(false);
+        });
+        res.addActionListener(e -> {
+            start.setEnabled(true);
+            stop.setEnabled(false);
+            timer=0;
+            timerEl=0;
+            firePress=false;
+            lightPress=false;
+            firstMes=true;
+            night.setEnabled(false);
+            fire.setEnabled(false);
+            emer =0;
+            l1.setIcon(new ImageIcon(ligG));
+            l2.setIcon(new ImageIcon(ligG));
+            l3.setIcon(new ImageIcon(ligR));
+            l4.setIcon(new ImageIcon(ligR));
+            dataset.clear();
+            curAvt=0;
+            sumMon=0;
+            open1=false;
+            emer1.setEnabled(false);
+            emer2.setEnabled(false);
+            jTA.setText("");
+            open2=false;
+            begin=false;
+            im.setIcon(new ImageIcon(image));
+            im1.setIcon(new ImageIcon(image));
+            count.setText(curAvt + "/" + maxAvt + " мест занято");
+            pBar.setValue(0);
+        });
+
+        start.setBounds(320,325,95,35);
+        stop.setBounds(430,325,95,35);
+        res.setBounds(540,325,95,35);
 
         im.setBounds(620,25,85,85);
         im1.setBounds(620,120,85,85);
@@ -214,6 +278,9 @@ public class Main extends JFrame{
             emer1.setEnabled(true);
             jTA.setText(jTA.getText() + "[" +LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Были обнаружены признаки горения\n");
             timer = 5;
+            if (autoCl){
+                emer1.doClick();
+            }
         });
         night.addActionListener(actionEvent -> {
             emer += 2;
@@ -233,7 +300,9 @@ public class Main extends JFrame{
                 im1.setIcon(new ImageIcon(Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"))));
                 open2=true;
             }
-
+            if (autoCl){
+                emer2.doClick();
+            }
         });
         emer1.addActionListener(actionEvent -> {
             if (timer==0){
@@ -279,8 +348,39 @@ public class Main extends JFrame{
 
         //Слайдеры
         slIn.addChangeListener(actionEvent -> {
-
             slOut.setMaximum(100-slIn.getValue());
+            sl1.setText("Въезд автомобиля: "+slIn.getValue()+"%");
+        });
+        slOut.addChangeListener(actionEvent -> sl2.setText("Выезд автомобиля: "+slOut.getValue()+"%"));
+        emerChS.addChangeListener(actionEvent -> emerCh.setText("Случайную аварию: "+emerChS.getValue()+"%"));
+
+        //Reset
+        reset.addActionListener(actionEvent -> {
+            slIn.setValue(50);
+            slOut.setValue(25);
+            emerChS.setValue(0);
+            num.setValue(100);
+            pri.setValue(100);
+            autoCh.setSelected(false);
+            chanceIn = 0.5;
+            chanceOut = 0.25;
+            emerChD = 0;
+            monFOH = 100;
+            maxAvt = 100;
+            autoCl = false;
+        });
+
+        //Apply
+        apply.addActionListener(actionEvent -> {
+            chanceIn = (double) slIn.getValue()/100;
+            chanceOut = (double) slOut.getValue()/100;
+            emerChD = (double) emerChS.getValue()/100;
+            monFOH = (int)pri.getValue();
+            maxAvt = (int)num.getValue();
+            if (curAvt>maxAvt){
+                curAvt = maxAvt;
+            }
+            autoCl = autoCh.isSelected();
         });
 
         count.setBounds(65,320,200,35);
@@ -356,6 +456,9 @@ public class Main extends JFrame{
         pan1.add(time);
         pan1.add(jSP);
         pan1.add(count);
+        pan1.add(start);
+        pan1.add(stop);
+        pan1.add(res);
 
         pan2.add(numInf);
         pan2.add(priInf);
@@ -382,158 +485,174 @@ public class Main extends JFrame{
     }
 
     public static void run(){
-        int endOfWhile = 1;
+        endOfWhile = 1;
         while (endOfWhile==1) {
             time.setText(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
-            pBar.setValue(curAvt);
-            count.setText(curAvt + "/" + maxAvt + " мест занято");
-            dataset.addValue(sumMon, "", time.getText());
-            if (dataset.getColumnCount() > 101) {
-                dataset.removeColumn(0);
-            }
-
-            if ((emer == 0) || (emer == 1 && timer > 0 && !firePress) || (emer == 2 && lightPress)) { // Нет аварийной ситуации или не вызвана 112
-                if (timer > 0) {
-                    timer--;
-                    System.out.println(timer);
-                }
-                if (timerEl == 1) {
-                    jTA.setText(jTA.getText() + "[" + LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Питание было восстановлено\n");
-                    night.setEnabled(true);
-                    lightPress = false;
-                    l4.setIcon(new ImageIcon(ligR));
-                    emer -= 2;
-                }
-                if (timerEl > 0) {
-                    timerEl--;
-                }
-
-                if (curAvt < maxAvt) {
-                    if (!open1) {
-                        open1 = carEnter();
-                        if (open1) {
-                            Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"));
-                            im.setIcon(new ImageIcon(image));
+            if (begin){
+                pBar.setValue(curAvt);
+                count.setText(curAvt + "/" + maxAvt + " мест занято");
+                dataset.addValue(sumMon, "", time.getText());
+                if (Math.random()<emerChD){
+                    if (fire.isEnabled() && night.isEnabled()){
+                        if (Math.random()<=0.5){
+                            fire.doClick();
                         }
-                    } else {
-                        Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/close.gif"));
-                        im.setIcon(new ImageIcon(image));
-                        open1 = false;
+                        else{
+                            night.doClick();
+                        }
                     }
-                    if (!open2 && curAvt < maxAvt) {
-                        open2 = carEnter();
-                        if (open2) {
-                            Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"));
+                    else{
+                        if (fire.isEnabled()){
+                            fire.doClick();
+                        }
+                        else{
+                            night.doClick();
+                        }
+                    }
+                }
+                if (dataset.getColumnCount() > 101) {
+                    dataset.removeColumn(0);
+                }
+
+                if ((emer == 0) || (emer == 1 && timer > 0 && !firePress) || (emer == 2 && lightPress)) { // Нет аварийной ситуации или не вызвана 112
+                    if (timer > 0) {
+                        timer--;
+                    }
+                    if (timerEl == 1) {
+                        jTA.setText(jTA.getText() + "[" + LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Питание было восстановлено\n");
+                        night.setEnabled(true);
+                        lightPress = false;
+                        l4.setIcon(new ImageIcon(ligR));
+                        emer -= 2;
+                    }
+                    if (timerEl > 0) {
+                        timerEl--;
+                    }
+
+                    if (curAvt < maxAvt) {
+                        if (!open1) {
+                            open1 = carEnter();
+                            if (open1) {
+                                Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"));
+                                im.setIcon(new ImageIcon(image));
+                            }
+                        } else {
+                            Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/close.gif"));
+                            im.setIcon(new ImageIcon(image));
+                            open1 = false;
+                        }
+                        if (!open2 && curAvt < maxAvt) {
+                            open2 = carEnter();
+                            if (open2) {
+                                Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"));
+                                im1.setIcon(new ImageIcon(image));
+                            }
+                        } else {
+                            Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/close.gif"));
                             im1.setIcon(new ImageIcon(image));
+                            open2 = false;
                         }
                     } else {
-                        Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/close.gif"));
-                        im1.setIcon(new ImageIcon(image));
-                        open2 = false;
+                        if (!open1) {
+                            if (curAvt != 0 && Math.random() < chanceOut) {
+                                curAvt--;
+                                sumMon += monFOH * (Math.random() * 5 + 1);
+                                open1 = true;
+                                Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"));
+                                im.setIcon(new ImageIcon(image));
+                            }
+                        } else {
+                            Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/close.gif"));
+                            im.setIcon(new ImageIcon(image));
+                            open1 = false;
+                        }
+                        if (!open2) {
+                            if (curAvt != 0 && Math.random() < chanceOut) {
+                                curAvt--;
+                                sumMon += monFOH * (Math.random() * 5 + 1);
+                                open2 = true;
+                                Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"));
+                                im1.setIcon(new ImageIcon(image));
+                            }
+                        } else {
+                            Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/close.gif"));
+                            im1.setIcon(new ImageIcon(image));
+                            open2 = false;
+                        }
                     }
                 } else {
-                    if (!open1) {
-                        if (curAvt != 0 && Math.random() < chanceOut) {
-                            curAvt--;
-                            sumMon += monFOH * (Math.random() * 5 + 1);
-                            open1 = true;
-                            Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"));
-                            im.setIcon(new ImageIcon(image));
-                        }
-                    } else {
-                        Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/close.gif"));
-                        im.setIcon(new ImageIcon(image));
-                        open1 = false;
-                    }
-                    if (!open2) {
-                        if (curAvt != 0 && Math.random() < chanceOut) {
-                            curAvt--;
-                            sumMon += monFOH * (Math.random() * 5 + 1);
-                            open2 = true;
-                            Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"));
-                            im1.setIcon(new ImageIcon(image));
-                        }
-                    } else {
-                        Image image = Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/close.gif"));
-                        im1.setIcon(new ImageIcon(image));
-                        open2 = false;
-                    }
-                }
-            } else {
-                switch (emer) {
-                    case 1: {
-                        if (timer == 0 && !firePress) {
-                            if (firstMes) {
-                                jTA.setText(jTA.getText() + "[" + LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Был обнаружен пожар\n");
-                                if (!open1 || !open2) {
-                                    jTA.setText(jTA.getText() + "[" + LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Шлагбаумы были подняты\n");
+                    switch (emer) {
+                        case 1: {
+                            if (timer == 0 && !firePress) {
+                                if (firstMes) {
+                                    jTA.setText(jTA.getText() + "[" + LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Был обнаружен пожар\n");
+                                    if (!open1 || !open2) {
+                                        jTA.setText(jTA.getText() + "[" + LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Шлагбаумы были подняты\n");
+                                    }
+                                    if (!open1) {
+                                        im.setIcon(new ImageIcon(Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"))));
+                                        open1 = true;
+                                    }
+                                    if (!open2) {
+                                        im1.setIcon(new ImageIcon(Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"))));
+                                        open2 = true;
+                                    }
+
+                                    firstMes = false;
                                 }
+                                openCloseElse();
+                            }
+                            if (firePress && timer > 0) {
+                                timer--;
+                                openCloseElse();
+                            }
+                            if (firePress && timer == 0) {
+                                emer--;
+                                jTA.setText(jTA.getText() + "[" + LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Пожар был ликвидирован\n");
+                                firePress = false;
+                                firstMes = true;
+                                l3.setIcon(new ImageIcon(ligR));
+                                fire.setEnabled(true);
                                 if (!open1) {
-                                    im.setIcon(new ImageIcon(Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"))));
-                                    open1 = true;
+                                    im.setIcon(new ImageIcon(Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/close.gif"))));
+                                    open1 = false;
                                 }
                                 if (!open2) {
-                                    im1.setIcon(new ImageIcon(Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/open.gif"))));
-                                    open2 = true;
+                                    im1.setIcon(new ImageIcon(Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/close.gif"))));
+                                    open2 = false;
+                                }
+                            }
+                            break;
+                        }
+                        case 2: {
+                            openClose();
+                            break;
+                        }
+                        case 3: {
+                            if (timer > 0) {
+                                timer--;
+                            }
+                            if (timer == 0 && !firePress) {
+                                if (firstMes) {
+                                    jTA.setText(jTA.getText() + "[" + LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Был обнаружен пожар\n");
+                                    firstMes = false;
                                 }
 
-                                firstMes = false;
                             }
-                            openCloseElse();
-                        }
-                        if (firePress && timer > 0) {
-                            timer--;
-                            System.out.println(timer);
-                            openCloseElse();
-                        }
-                        if (firePress && timer == 0) {
-                            emer--;
-                            jTA.setText(jTA.getText() + "[" + LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Пожар был ликвидирован\n");
-                            firePress = false;
-                            firstMes = true;
-                            l3.setIcon(new ImageIcon(ligR));
-                            fire.setEnabled(true);
-                            if (!open1) {
-                                im.setIcon(new ImageIcon(Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/close.gif"))));
-                                open1 = false;
+                            if (firePress && timer == 0) {
+                                emer--;
+                                jTA.setText(jTA.getText() + "[" + LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Пожар был ликвидирован\n");
+                                firePress = false;
+                                firstMes = true;
+                                l3.setIcon(new ImageIcon(ligR));
+                                fire.setEnabled(true);
                             }
-                            if (!open2) {
-                                im1.setIcon(new ImageIcon(Toolkit.getDefaultToolkit().createImage(Main.class.getResource("/close.gif"))));
-                                open2 = false;
-                            }
+                            openClose();
+                            break;
                         }
-                        break;
-                    }
-                    case 2: {
-                        openClose();
-                        break;
-                    }
-                    case 3: {
-                        if (timer > 0) {
-                            timer--;
-                        }
-                        if (timer == 0 && !firePress) {
-                            if (firstMes) {
-                                jTA.setText(jTA.getText() + "[" + LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Был обнаружен пожар\n");
-                                firstMes = false;
-                            }
-
-                        }
-                        if (firePress && timer == 0) {
-                            emer--;
-                            jTA.setText(jTA.getText() + "[" + LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Пожар был ликвидирован\n");
-                            firePress = false;
-                            firstMes = true;
-                            l3.setIcon(new ImageIcon(ligR));
-                            fire.setEnabled(true);
-                        }
-                        openClose();
-                        break;
                     }
                 }
             }
-
-
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
@@ -541,6 +660,7 @@ public class Main extends JFrame{
                 endOfWhile=0;
             }
         }
+
     }
 
     public static void openClose(){
