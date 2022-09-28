@@ -51,6 +51,7 @@ public class Main extends JFrame{
     static boolean autoCl = false;
     static int endOfWhile = 1;
     static boolean begin = false;
+    static int thrSleep = 1000;
 
     public static void window(){
 
@@ -83,7 +84,9 @@ public class Main extends JFrame{
         JLabel auto = new JLabel("<html>Автоматическое реагирование<br>на аварии:</html>");
         SpinnerModel model = new SpinnerNumberModel(100,1,250,1);
         SpinnerModel model1 = new SpinnerNumberModel(100,10,10000,10);
+        SpinnerModel model2 = new SpinnerNumberModel(1000,100,10000,100);
         JSpinner num = new JSpinner(model);
+        JSpinner sleep = new JSpinner(model2);
         JCheckBox autoCh = new JCheckBox();
         JButton apply = new JButton("Применить");
         JButton reset = new JButton("Сброс");
@@ -93,6 +96,8 @@ public class Main extends JFrame{
         JSpinner pri = new JSpinner(model1);
         JLabel numInf = new JLabel(" От 1 до 250");
         JLabel priInf = new JLabel(" От 10 до 10000");
+        JLabel sleepJ = new JLabel("Скорость:");
+        JLabel sleepInf = new JLabel("<html>От 100 до 10000.<br>Чем меньше число - тем быстрее</html>");
 
         slIn.setValue(50);
         slOut.setValue(25);
@@ -102,6 +107,7 @@ public class Main extends JFrame{
         sl.setFont(font);
         sl1.setFont(fontSm);
         sl2.setFont(fontSm);
+        sleepJ.setFont(fontSm);
         emerCh.setFont(fontSm);
         kolAvt.setFont(fontSm);
         priceLa.setFont(fontSm);
@@ -119,6 +125,9 @@ public class Main extends JFrame{
         priceLa.setBounds(425,110,250,20);
         auto.setBounds(425,180,250,35);
         num.setBounds(425,70,40,20);
+        sleep.setBounds(425,275,100,20);
+        sleepJ.setBounds(425,250,200,20);
+        sleepInf.setBounds(530,255,200,60);
         numInf.setBounds(465,70,250,20);
         pri.setBounds(425,140,100,20);
         priInf.setBounds(525,140,200,20);
@@ -229,6 +238,7 @@ public class Main extends JFrame{
             l3.setIcon(new ImageIcon(ligR));
             l4.setIcon(new ImageIcon(ligR));
             dataset.clear();
+            dataset.addValue(0,"","");
             curAvt=0;
             sumMon=0;
             open1=false;
@@ -362,11 +372,13 @@ public class Main extends JFrame{
             num.setValue(100);
             pri.setValue(100);
             autoCh.setSelected(false);
+            sleep.setValue(1000);
             chanceIn = 0.5;
             chanceOut = 0.25;
             emerChD = 0;
             monFOH = 100;
             maxAvt = 100;
+            thrSleep = 1000;
             autoCl = false;
         });
 
@@ -381,6 +393,9 @@ public class Main extends JFrame{
                 curAvt = maxAvt;
             }
             autoCl = autoCh.isSelected();
+            pBar.setMaximum(maxAvt);
+            count.setText(curAvt + "/" + maxAvt + " мест занято");
+            thrSleep = (int)sleep.getValue();
         });
 
         count.setBounds(65,320,200,35);
@@ -477,6 +492,9 @@ public class Main extends JFrame{
         pan2.add(emerCh);
         pan2.add(pri);
         pan2.add(priceLa);
+        pan2.add(sleep);
+        pan2.add(sleepJ);
+        pan2.add(sleepInf);
 
         app.add(tp);
         app.setVisible(true);
@@ -491,7 +509,7 @@ public class Main extends JFrame{
             if (begin){
                 pBar.setValue(curAvt);
                 count.setText(curAvt + "/" + maxAvt + " мест занято");
-                dataset.addValue(sumMon, "", time.getText());
+                dataset.addValue(sumMon, "", LocalTime.now());
                 if (Math.random()<emerChD){
                     if (fire.isEnabled() && night.isEnabled()){
                         if (Math.random()<=0.5){
@@ -654,7 +672,7 @@ public class Main extends JFrame{
                 }
             }
             try {
-                Thread.sleep(1000);
+                Thread.sleep(thrSleep);
             } catch (InterruptedException e) {
                 errorDialog(e);
                 endOfWhile=0;

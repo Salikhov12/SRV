@@ -1,3 +1,6 @@
-
+output/*
+*.jar
+*.zip
+*.7z
 .idea/*
 target/*
