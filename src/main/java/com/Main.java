@@ -3,6 +3,9 @@ package com;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.NumberTickUnit;
+import org.jfree.chart.axis.TickUnit;
+import org.jfree.chart.axis.TickUnits;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.data.category.DefaultCategoryDataset;
 
@@ -52,11 +55,22 @@ public class Main extends JFrame{
     static int endOfWhile = 1;
     static boolean begin = false;
     static int thrSleep = 1000;
+    static JFreeChart lineChart;
+    static boolean firstSum = true;
+    static JLabel prib;
+    static JLabel rash;
+    static JLabel rashem;
+    static JLabel vir;
+    static int price = 4;
+    static int empricefire = 2500;
+    static int empricenight = 1500;
+    static int sumprice = 0;
+    static int sumempriceem = 0;
 
     public static void window(){
 
-        app = new JFrame("СУА");
-        app.setSize(750,600); //width 730 or 855
+        app = new JFrame("Управление автостоянокой. Салихов Р.Н. ПИ-422");
+        app.setSize(900,600); //width 730 or 855  +150
         app.setResizable(false);
         app.setLocation(150,100);
 
@@ -85,8 +99,14 @@ public class Main extends JFrame{
         SpinnerModel model = new SpinnerNumberModel(100,1,250,1);
         SpinnerModel model1 = new SpinnerNumberModel(100,10,10000,10);
         SpinnerModel model2 = new SpinnerNumberModel(1000,100,10000,100);
+        SpinnerModel model3 = new SpinnerNumberModel(4,1,100,1);
+        SpinnerModel model4 = new SpinnerNumberModel(2500,500,10000,250);
+        SpinnerModel model5 = new SpinnerNumberModel(1500,500,10000,250);
         JSpinner num = new JSpinner(model);
         JSpinner sleep = new JSpinner(model2);
+        JSpinner rashsp = new JSpinner(model3);
+        JSpinner rashfiresp = new JSpinner(model4);
+        JSpinner rashnightsp = new JSpinner(model5);
         JCheckBox autoCh = new JCheckBox();
         JButton apply = new JButton("Применить");
         JButton reset = new JButton("Сброс");
@@ -94,15 +114,29 @@ public class Main extends JFrame{
         JSlider emerChS = new JSlider(0,100);
         JLabel priceLa = new JLabel("Стоимость стоянки за \"час\":");
         JSpinner pri = new JSpinner(model1);
-        JLabel numInf = new JLabel(" От 1 до 250");
-        JLabel priInf = new JLabel(" От 10 до 10000");
-        JLabel sleepJ = new JLabel("Скорость:");
-        JLabel sleepInf = new JLabel("<html>От 100 до 10000.<br>Чем меньше число - тем быстрее</html>");
+        JLabel numInf = new JLabel(" От 1 до 250 автомобилей");
+        JLabel priInf = new JLabel(" От 10 до 10 000 рублей");
+        JLabel sleepJ = new JLabel("Скорость программы:");
+        JLabel inforash = new JLabel("Стоимость расходов:");
+        JLabel rashper = new JLabel("Расходы на обслуживание за шаг:");
+        JLabel rashperinfo = new JLabel("От 1 до 100 рублей");
+        JLabel rashfire = new JLabel("Стоимость вызова пожарных:");
+        JLabel rashfireinfo = new JLabel("От 500 до 10 000 рублей");
+        JLabel rashnight = new JLabel("Стоимость вызова электриков:");
+        JLabel rashnightinfo = new JLabel("От 500 до 10 000 рублей");
+        JLabel sleepInf = new JLabel("<html>От 100 до 10 000 мс.<br>Чем меньше число - тем быстрее</html>");
+        inforash.setFont(count.getFont().deriveFont(16f));
+        rashper.setFont(count.getFont().deriveFont(14f));
+        rashfire.setFont(count.getFont().deriveFont(14f));
+        rashnight.setFont(count.getFont().deriveFont(14f));
+        rash = new JLabel("<html>Расходы:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 руб.</html>");
+        prib = new JLabel("<html>Прибыль:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 руб.</html>");
+        vir = new JLabel( "<html>Выручка:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 руб.</html>");
+        rashem = new JLabel("<html>Чрезвычайные<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;расходы:&nbsp;0 руб.</html>");
 
         slIn.setValue(50);
         slOut.setValue(25);
         emerChS.setValue(0);
-
 
         sl.setFont(font);
         sl1.setFont(fontSm);
@@ -132,6 +166,20 @@ public class Main extends JFrame{
         pri.setBounds(425,140,100,20);
         priInf.setBounds(525,140,200,20);
         autoCh.setBounds(500,197,20,20);
+        rash.setBounds(20,40,200,20);
+        prib.setBounds(20,90,200,20);
+        vir.setBounds(20,20,200,20);
+        rashem.setBounds(20,60,200,30);
+        inforash.setBounds(30,240,200,30);/////////////////////////
+        rashper.setBounds(30,280,300,30);
+        rashperinfo.setBounds(100,305,200,30);
+        rashfire.setBounds(30,340,300,30);
+        rashfireinfo.setBounds(100,365,200,30);
+        rashnight.setBounds(30,400,300,30);
+        rashnightinfo.setBounds(100,425,200,30);
+        rashsp.setBounds(30,310,70,20);
+        rashfiresp.setBounds(30,370,70,20);
+        rashnightsp.setBounds(30,430,70,20);
         slIn.setPaintTicks(true);
         slIn.setMajorTickSpacing(10);
         slIn.setMinorTickSpacing(5);
@@ -225,6 +273,12 @@ public class Main extends JFrame{
         res.addActionListener(e -> {
             start.setEnabled(true);
             stop.setEnabled(false);
+            sumprice = 0;
+            sumempriceem = 0;
+            rash.setText("<html>Расходы:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 руб.</html>");
+            prib.setText("<html>Прибыль:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 руб.</html>");
+            vir.setText( "<html>Выручка:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;0 руб.</html>");
+            rashem.setText("<html>Чрезвычайные<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;расходы:&nbsp;0 руб.</html>");
             timer=0;
             timerEl=0;
             firePress=false;
@@ -237,7 +291,9 @@ public class Main extends JFrame{
             l2.setIcon(new ImageIcon(ligG));
             l3.setIcon(new ImageIcon(ligR));
             l4.setIcon(new ImageIcon(ligR));
+            firstSum = true;
             dataset.clear();
+            lineChart.getCategoryPlot().getRangeAxis().setAutoTickUnitSelection(false);
             dataset.addValue(0,"","");
             curAvt=0;
             sumMon=0;
@@ -257,26 +313,26 @@ public class Main extends JFrame{
         stop.setBounds(430,325,95,35);
         res.setBounds(540,325,95,35);
 
-        im.setBounds(620,25,85,85);
-        im1.setBounds(620,120,85,85);
-        l1.setBounds(705,90,12,12);
-        l2.setBounds(705,185,12,12);
-        l3.setBounds(110,410,12,12);
-        l4.setBounds(110,500,12,12);
+        im.setBounds(770,25,85,85);
+        im1.setBounds(770,120,85,85);
+        l1.setBounds(855,90,12,12);
+        l2.setBounds(855,185,12,12);
+        l3.setBounds(260,410,12,12);
+        l4.setBounds(260,500,12,12);
         emer1.setBounds(20,360,80,80);
         emer2.setBounds(20,450,80,80);
 
-        fire.setBounds(745,30,70,70);
-        night.setBounds(745,120,70,70);
-        av.setBounds(699,240,30,120);
+        fire.setBounds(895,30,70,70);
+        night.setBounds(895,120,70,70);
+        av.setBounds(849,240,30,120);
 
         av.addActionListener(actionEvent -> {
-            if (app.getSize().width == 750){
-                app.setSize(875,600);
+            if (app.getSize().width == 900){
+                app.setSize(1025,600);
                 av.setText("<html>А<br>в<br>а<br>р<br>и<br>и<br>◀</html>");
             }
             else{
-                app.setSize(750,600);
+                app.setSize(900,600);
                 av.setText("<html>А<br>в<br>а<br>р<br>и<br>и<br>▶</html>");
             }
         });
@@ -324,6 +380,7 @@ public class Main extends JFrame{
             l3.setIcon(new ImageIcon(ligG));
             emer1.setEnabled(false);
             jTA.setText(jTA.getText() + "[" +LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Передана информация о пожаре\n");
+            sumempriceem+=empricefire;
             if (emer!=3){
                 if (!open1 || !open2) {jTA.setText(jTA.getText() + "[" +LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Шлагбаумы были подняты\n");}
                 if (!open1){
@@ -396,6 +453,9 @@ public class Main extends JFrame{
             pBar.setMaximum(maxAvt);
             count.setText(curAvt + "/" + maxAvt + " мест занято");
             thrSleep = (int)sleep.getValue();
+            price = (int)rashsp.getValue();
+            empricefire = (int) rashfiresp.getValue();
+            empricenight = (int) rashnightsp.getValue();
         });
 
         count.setBounds(65,320,200,35);
@@ -404,9 +464,9 @@ public class Main extends JFrame{
         emInfo2.setFont(count.getFont().deriveFont(14f));
         emInfo1.setBounds(110,480,200,20);
         emInfo1.setFont(count.getFont().deriveFont(14f));
-        fireInfo.setBounds(755,100,110,20);
+        fireInfo.setBounds(905,100,110,20);
         fireInfo.setFont(count.getFont().deriveFont(14f));
-        nightInfo.setBounds(740,190,110,40);
+        nightInfo.setBounds(890,190,110,40);
         nightInfo.setFont(count.getFont().deriveFont(14f));
 
         pBar.setMaximum(100);
@@ -415,11 +475,11 @@ public class Main extends JFrame{
         pBar.setBorder(BorderFactory.createMatteBorder(2,2,2,2,Color.GRAY));
         pBar.setBackground(Color.decode("#74ED79"));
         pBar.setForeground(Color.decode("#4F6355"));
-        pBar.setBounds(65,280,600,35);
+        pBar.setBounds(65,280,750,35);
 
 
         time = new JLabel(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"))); // Время
-        time.setBounds(650,5,75,25);
+        time.setBounds(800,5,75,25);
         time.setFont(font);
 
         jTA = new JTextArea();
@@ -428,7 +488,7 @@ public class Main extends JFrame{
         DefaultCaret caret = (DefaultCaret)jTA.getCaret();
         caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE); //Автоматический скроллинг лога вниз
         jSP = new JScrollPane(jTA,JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,JScrollPane.HORIZONTAL_SCROLLBAR_NEVER); // Добавление прокрутки элементу
-        jSP.setBounds(325,370,405,150);
+        jSP.setBounds(325,370,555,150);
         jSP.setAutoscrolls(true);
 
         tp.addTab("Панель управления", pan1); // Отдельные вкладки в приложении
@@ -438,17 +498,19 @@ public class Main extends JFrame{
         /////////////////////////////////////////////////////////////////////////////////
         dataset = new DefaultCategoryDataset();
         dataset.addValue(0,"","");
-        JFreeChart lineChart = ChartFactory.createLineChart(
-                "Выручка","","",
+        lineChart = ChartFactory.createLineChart(
+                "Прибыль","Время","Прибыль, руб.",
                 dataset,
                 PlotOrientation.VERTICAL,
                 false,false,false);
 
         ChartPanel chartPanel = new ChartPanel(lineChart);
-        lineChart.getCategoryPlot().getDomainAxis().setTickLabelsVisible(false);
 
+        lineChart.getCategoryPlot().getDomainAxis().setTickLabelsVisible(false);
+        lineChart.getCategoryPlot().getRangeAxis().setAutoTickUnitSelection(false);
         chartPanel.setDomainZoomable(true);
-        chartPanel.setBounds(20,5,520,270);
+
+        chartPanel.setBounds(220,5,520,270);
         pan1.add(chartPanel);
         /////////////////////////////////////////////////////////////////////////////////
 
@@ -474,7 +536,21 @@ public class Main extends JFrame{
         pan1.add(start);
         pan1.add(stop);
         pan1.add(res);
+        pan1.add(rash);
+        pan1.add(prib);
+        pan1.add(vir);
+        pan1.add(rashem);
 
+        pan2.add(rashsp);
+        pan2.add(rashfiresp);
+        pan2.add(rashnightsp);
+        pan2.add(inforash);
+        pan2.add(rashper);
+        pan2.add(rashperinfo);
+        pan2.add(rashfire);
+        pan2.add(rashfireinfo);
+        pan2.add(rashnight);
+        pan2.add(rashnightinfo);
         pan2.add(numInf);
         pan2.add(priInf);
         pan2.add(slIn);
@@ -507,9 +583,19 @@ public class Main extends JFrame{
         while (endOfWhile==1) {
             time.setText(LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")));
             if (begin){
+
                 pBar.setValue(curAvt);
                 count.setText(curAvt + "/" + maxAvt + " мест занято");
-                dataset.addValue(sumMon, "", LocalTime.now());
+                if (sumMon!=0 && firstSum){
+                    lineChart.getCategoryPlot().getRangeAxis().setAutoTickUnitSelection(true);
+                    firstSum = false;
+                }
+                sumprice+=price;
+                rash.setText("<html>Расходы:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+sumprice+" руб.</html>");
+                rashem.setText("<html>Чрезвычайные<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;расходы:&nbsp;"+sumempriceem+" руб.</html>");
+                prib.setText("<html>Прибыль:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+(sumMon-sumprice-sumempriceem)+" руб.</html>");
+                vir.setText("<html>Выручка:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;"+sumMon+" руб.</html>");
+                dataset.addValue((sumMon-sumprice-sumempriceem), "", LocalTime.now());
                 if (Math.random()<emerChD){
                     if (fire.isEnabled() && night.isEnabled()){
                         if (Math.random()<=0.5){
@@ -538,6 +624,7 @@ public class Main extends JFrame{
                     }
                     if (timerEl == 1) {
                         jTA.setText(jTA.getText() + "[" + LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss")) + "]:" + " Питание было восстановлено\n");
+                        sumempriceem+=empricenight;
                         night.setEnabled(true);
                         lightPress = false;
                         l4.setIcon(new ImageIcon(ligR));
